@@ -19,7 +19,7 @@
                     <option value="def-to-word">Tłumaczenie -> Słówko</option>
                 </select>
 
-                <label>Wybierz plik:</label>
+                <label>Wybierz plik słówka.txt:</label>
                 <input type="file" id="file-input" accept=".txt">
                 
                 <button id="start-btn">Rozpocznij naukę</button>
@@ -31,7 +31,10 @@
                 <div class="progress">Słówko <span id="current-idx">1</span> z <span id="total-idx">0</span></div>
                 <div id="question-display"></div>
                 <input type="text" id="answer-input" placeholder="Wpisz odpowiedź...">
-                <button id="check-btn">Sprawdź</button>
+                <div style="display: flex; gap: 10px;">
+                    <button id="check-btn" style="flex: 1;">Sprawdź</button>
+                    <button id="reset-btn" style="flex: 1; background-color: #dc3545;">Resetuj</button>
+                </div>
                 <div id="feedback"></div>
             </div>
         </div>
@@ -43,7 +46,7 @@
                     Twój wynik: <span id="percentage">0</span>%
                 </div>
                 <p>Poprawne odpowiedzi: <span id="correct-count">0</span> / <span id="total-count">0</span></p>
-                <button onclick="location.reload()">Zacznij od nowa</button>
+                <button id="restart-btn">Zacznij od nowa (Losuj ponownie)</button>
             </div>
         </div>
     </div>
@@ -51,6 +54,8 @@
     <script>
         const fileInput = document.getElementById('file-input');
         const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const restartBtn = document.getElementById('restart-btn');
         const setupSection = document.getElementById('setup-section');
         const quizSection = document.getElementById('quiz-section');
         const resultSection = document.getElementById('result-section');
@@ -63,6 +68,7 @@
         let currentIndex = 0;
         let correctAnswers = 0;
         let mode = 'word-to-def';
+        let timeoutId;
 
         startBtn.addEventListener('click', () => {
             const file = fileInput.files[0];
@@ -100,13 +106,30 @@
             }).filter(item => item !== null);
         }
 
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
         function startQuiz() {
+            clearTimeout(timeoutId);
+            checkBtn.disabled = false;
+            
+            shuffleArray(wordsData);
+            
             setupSection.classList.add('hidden');
+            resultSection.classList.add('hidden');
             quizSection.classList.remove('hidden');
+            
             currentIndex = 0;
             correctAnswers = 0;
             showQuestion();
         }
+
+        resetBtn.addEventListener('click', startQuiz);
+        restartBtn.addEventListener('click', startQuiz);
 
         function showQuestion() {
             feedback.textContent = '';
@@ -122,7 +145,7 @@
 
         checkBtn.addEventListener('click', handleAnswer);
         answerInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleAnswer();
+            if (e.key === 'Enter' && !checkBtn.disabled) handleAnswer();
         });
 
         function handleAnswer() {
@@ -140,7 +163,7 @@
             }
 
             checkBtn.disabled = true;
-            setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 currentIndex++;
                 checkBtn.disabled = false;
                 if (currentIndex < wordsData.length) {
