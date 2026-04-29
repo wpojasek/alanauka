@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nauczyciel Słówek</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Nauczyciel Słówek</h1>
+
+        <div id="setup-section">
+            <div class="card">
+                <label>Wybierz tryb nauki:</label>
+                <select id="mode-select">
+                    <option value="word-to-def">Słówko -> Tłumaczenie</option>
+                    <option value="def-to-word">Tłumaczenie -> Słówko</option>
+                </select>
+
+                <label>Wybierz plik:</label>
+                <input type="file" id="file-input" accept=".txt">
+                
+                <button id="start-btn">Rozpocznij naukę</button>
+            </div>
+        </div>
+
+        <div id="quiz-section" class="hidden">
+            <div class="card">
+                <div class="progress">Słówko <span id="current-idx">1</span> z <span id="total-idx">0</span></div>
+                <div id="question-display"></div>
+                <input type="text" id="answer-input" placeholder="Wpisz odpowiedź...">
+                <button id="check-btn">Sprawdź</button>
+                <div id="feedback"></div>
+            </div>
+        </div>
+
+        <div id="result-section" class="hidden">
+            <div class="card">
+                <h2>Koniec nauki!</h2>
+                <div class="score-box">
+                    Twój wynik: <span id="percentage">0</span>%
+                </div>
+                <p>Poprawne odpowiedzi: <span id="correct-count">0</span> / <span id="total-count">0</span></p>
+                <button onclick="location.reload()">Zacznij od nowa</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const startBtn = document.getElementById('start-btn');
+        const setupSection = document.getElementById('setup-section');
+        const quizSection = document.getElementById('quiz-section');
+        const resultSection = document.getElementById('result-section');
+        const questionDisplay = document.getElementById('question-display');
+        const answerInput = document.getElementById('answer-input');
+        const checkBtn = document.getElementById('check-btn');
+        const feedback = document.getElementById('feedback');
+
+        let wordsData = [];
+        let currentIndex = 0;
+        let correctAnswers = 0;
+        let mode = 'word-to-def';
+
+        startBtn.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Proszę wybrać plik .txt");
+                return;
+            }
+
+            mode = document.getElementById('mode-select').value;
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                const text = e.target.result;
+                parseFile(text);
+                if (wordsData.length > 0) {
+                    startQuiz();
+                } else {
+                    alert("Plik jest pusty lub ma błędny format.");
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function parseFile(text) {
+            const lines = text.split('\n');
+            wordsData = lines.map(line => {
+                const parts = line.split(' - ');
+                if (parts.length === 2) {
+                    return {
+                        word: parts[0].replace(/"/g, '').trim(),
+                        def: parts[1].replace(/"/g, '').trim()
+                    };
+                }
+                return null;
+            }).filter(item => item !== null);
+        }
+
+        function startQuiz() {
+            setupSection.classList.add('hidden');
+            quizSection.classList.remove('hidden');
+            currentIndex = 0;
+            correctAnswers = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            feedback.textContent = '';
+            answerInput.value = '';
+            answerInput.focus();
+            
+            document.getElementById('current-idx').textContent = currentIndex + 1;
+            document.getElementById('total-idx').textContent = wordsData.length;
+
+            const currentPair = wordsData[currentIndex];
+            questionDisplay.textContent = mode === 'word-to-def' ? currentPair.word : currentPair.def;
+        }
+
+        checkBtn.addEventListener('click', handleAnswer);
+        answerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAnswer();
+        });
+
+        function handleAnswer() {
+            const userAnswer = answerInput.value.trim().toLowerCase();
+            const currentPair = wordsData[currentIndex];
+            const correctAnswer = mode === 'word-to-def' ? currentPair.def.toLowerCase() : currentPair.word.toLowerCase();
+
+            if (userAnswer === correctAnswer) {
+                correctAnswers++;
+                feedback.textContent = "Dobrze!";
+                feedback.className = "success";
+            } else {
+                feedback.textContent = `Błąd. Poprawna odpowiedź to: ${correctAnswer}`;
+                feedback.className = "error";
+            }
+
+            checkBtn.disabled = true;
+            setTimeout(() => {
+                currentIndex++;
+                checkBtn.disabled = false;
+                if (currentIndex < wordsData.length) {
+                    showQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1500);
+        }
+
+        function showResults() {
+            quizSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+            
+            const percent = Math.round((correctAnswers / wordsData.length) * 100);
+            document.getElementById('percentage').textContent = percent;
+            document.getElementById('correct-count').textContent = correctAnswers;
+            document.getElementById('total-count').textContent = wordsData.length;
+        }
+    </script>
+</body>
+</html>
