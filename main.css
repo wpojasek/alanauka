@@ -16,7 +16,7 @@ body {
 
 .container {
     width: 100%;
-    max-width: 500px;
+    max-width: 600px;
 }
 
 h1 {
@@ -35,6 +35,11 @@ h1 {
     gap: 15px;
 }
 
+.result-card {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 label {
     font-weight: bold;
     color: #555;
@@ -48,10 +53,22 @@ select, input[type="file"], input[type="text"] {
     font-size: 16px;
     outline: none;
     transition: border-color 0.3s;
+    width: 100%;
 }
 
 input[type="text"]:focus {
     border-color: #1a73e8;
+}
+
+input[type="text"]:disabled {
+    background-color: #f5f5f5;
+    color: #888;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    width: 100%;
 }
 
 button {
@@ -64,22 +81,35 @@ button {
     font-weight: bold;
     cursor: pointer;
     transition: background 0.3s;
+    flex: 1;
 }
 
 button:hover {
     background-color: #1557b0;
 }
 
-button:disabled {
-    background-color: #ccc;
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-success {
+    background-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 #question-display {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: bold;
     text-align: center;
     margin: 20px 0;
@@ -96,6 +126,8 @@ button:disabled {
     text-align: center;
     font-weight: bold;
     min-height: 24px;
+    font-size: 18px;
+    margin-top: 5px;
 }
 
 .success {
@@ -111,7 +143,7 @@ button:disabled {
     font-weight: bold;
     text-align: center;
     color: #1a73e8;
-    margin: 20px 0;
+    margin: 10px 0;
 }
 
 h2 {
@@ -125,12 +157,63 @@ p {
     margin-bottom: 10px;
 }
 
-@media (max-width: 400px) {
+.table-container {
+    width: 100%;
+    max-height: 350px;
+    overflow-y: auto;
+    overflow-x: auto;
+    margin-bottom: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.results-table th, .results-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.results-table th {
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    font-weight: bold;
+    color: #444;
+}
+
+.results-table tr:last-child td {
+    border-bottom: none;
+}
+
+.text-success {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.text-danger {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+@media (max-width: 500px) {
     .card {
         padding: 20px;
     }
     
     h1 {
         font-size: 24px;
+    }
+
+    #question-display {
+        font-size: 24px;
+    }
+
+    .button-group {
+        flex-direction: column;
     }
 }
