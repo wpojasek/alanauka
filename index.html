@@ -30,22 +30,38 @@
             <div class="card">
                 <div class="progress">Słówko <span id="current-idx">1</span> z <span id="total-idx">0</span></div>
                 <div id="question-display"></div>
-                <input type="text" id="answer-input" placeholder="Wpisz odpowiedź...">
-                <div style="display: flex; gap: 10px;">
-                    <button id="check-btn" style="flex: 1;">Sprawdź</button>
-                    <button id="reset-btn" style="flex: 1; background-color: #dc3545;">Resetuj</button>
+                <input type="text" id="answer-input" placeholder="Wpisz odpowiedź..." autocomplete="off">
+                <div class="button-group">
+                    <button id="check-btn">Sprawdź</button>
+                    <button id="next-btn" class="hidden btn-success">Dalej</button>
+                    <button id="reset-btn" class="btn-danger">Resetuj</button>
                 </div>
                 <div id="feedback"></div>
             </div>
         </div>
 
         <div id="result-section" class="hidden">
-            <div class="card">
+            <div class="card result-card">
                 <h2>Koniec nauki!</h2>
                 <div class="score-box">
                     Twój wynik: <span id="percentage">0</span>%
                 </div>
                 <p>Poprawne odpowiedzi: <span id="correct-count">0</span> / <span id="total-count">0</span></p>
+                
+                <div class="table-container">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Słówko / Definicja</th>
+                                <th>Twoja odpowiedź</th>
+                                <th>Poprawna odpowiedź</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-table-body">
+                        </tbody>
+                    </table>
+                </div>
+
                 <button id="restart-btn">Zacznij od nowa (Losuj ponownie)</button>
             </div>
         </div>
@@ -56,19 +72,23 @@
         const startBtn = document.getElementById('start-btn');
         const resetBtn = document.getElementById('reset-btn');
         const restartBtn = document.getElementById('restart-btn');
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
         const setupSection = document.getElementById('setup-section');
         const quizSection = document.getElementById('quiz-section');
         const resultSection = document.getElementById('result-section');
+        
         const questionDisplay = document.getElementById('question-display');
         const answerInput = document.getElementById('answer-input');
-        const checkBtn = document.getElementById('check-btn');
         const feedback = document.getElementById('feedback');
+        const resultsTableBody = document.getElementById('results-table-body');
 
         let wordsData = [];
+        let answerHistory = [];
         let currentIndex = 0;
         let correctAnswers = 0;
         let mode = 'word-to-def';
-        let timeoutId;
 
         startBtn.addEventListener('click', () => {
             const file = fileInput.files[0];
@@ -114,9 +134,6 @@
         }
 
         function startQuiz() {
-            clearTimeout(timeoutId);
-            checkBtn.disabled = false;
-            
             shuffleArray(wordsData);
             
             setupSection.classList.add('hidden');
@@ -125,6 +142,7 @@
             
             currentIndex = 0;
             correctAnswers = 0;
+            answerHistory = [];
             showQuestion();
         }
 
@@ -134,7 +152,11 @@
         function showQuestion() {
             feedback.textContent = '';
             answerInput.value = '';
+            answerInput.disabled = false;
             answerInput.focus();
+            
+            checkBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
             
             document.getElementById('current-idx').textContent = currentIndex + 1;
             document.getElementById('total-idx').textContent = wordsData.length;
@@ -144,16 +166,34 @@
         }
 
         checkBtn.addEventListener('click', handleAnswer);
+        nextBtn.addEventListener('click', goToNext);
+
         answerInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !checkBtn.disabled) handleAnswer();
+            if (e.key === 'Enter') {
+                if (!checkBtn.classList.contains('hidden')) {
+                    handleAnswer();
+                } else if (!nextBtn.classList.contains('hidden')) {
+                    goToNext();
+                }
+            }
         });
 
         function handleAnswer() {
             const userAnswer = answerInput.value.trim().toLowerCase();
             const currentPair = wordsData[currentIndex];
             const correctAnswer = mode === 'word-to-def' ? currentPair.def.toLowerCase() : currentPair.word.toLowerCase();
+            const questionText = mode === 'word-to-def' ? currentPair.word : currentPair.def;
 
-            if (userAnswer === correctAnswer) {
+            const isCorrect = userAnswer === correctAnswer;
+
+            answerHistory.push({
+                question: questionText,
+                userAnswer: userAnswer || '(brak)',
+                correctAnswer: correctAnswer,
+                isCorrect: isCorrect
+            });
+
+            if (isCorrect) {
                 correctAnswers++;
                 feedback.textContent = "Dobrze!";
                 feedback.className = "success";
@@ -162,16 +202,19 @@
                 feedback.className = "error";
             }
 
-            checkBtn.disabled = true;
-            timeoutId = setTimeout(() => {
-                currentIndex++;
-                checkBtn.disabled = false;
-                if (currentIndex < wordsData.length) {
-                    showQuestion();
-                } else {
-                    showResults();
-                }
-            }, 1500);
+            answerInput.disabled = true;
+            checkBtn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+            nextBtn.focus();
+        }
+
+        function goToNext() {
+            currentIndex++;
+            if (currentIndex < wordsData.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
         }
 
         function showResults() {
@@ -182,6 +225,19 @@
             document.getElementById('percentage').textContent = percent;
             document.getElementById('correct-count').textContent = correctAnswers;
             document.getElementById('total-count').textContent = wordsData.length;
+
+            resultsTableBody.innerHTML = '';
+            answerHistory.forEach(item => {
+                const tr = document.createElement('tr');
+                const userAnsClass = item.isCorrect ? 'text-success' : 'text-danger';
+                
+                tr.innerHTML = `
+                    <td>${item.question}</td>
+                    <td class="${userAnsClass}">${item.userAnswer}</td>
+                    <td class="text-success">${item.correctAnswer}</td>
+                `;
+                resultsTableBody.appendChild(tr);
+            });
         }
     </script>
 </body>
