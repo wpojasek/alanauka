@@ -13,16 +13,14 @@
 
         <div id="setup-section">
             <div class="card">
-                <label>Wybierz tryb nauki:</label>
-                <select id="mode-select">
-                    <option value="word-to-def">Słówko -> Tłumaczenie</option>
-                    <option value="def-to-word">Tłumaczenie -> Słówko</option>
-                </select>
-
-                <label>Wybierz plik słówka.txt:</label>
+                <label>1. Wybierz plik słówka.txt:</label>
                 <input type="file" id="file-input" accept=".txt">
                 
-                <button id="start-btn">Rozpocznij naukę</button>
+                <label>2. Wybierz tryb i rozpocznij:</label>
+                <div class="vertical-buttons">
+                    <button id="start-word-def-btn">Słówko -> Tłumaczenie</button>
+                    <button id="start-def-word-btn">Tłumaczenie -> Słówko</button>
+                </div>
             </div>
         </div>
 
@@ -62,13 +60,12 @@
                     </table>
                 </div>
 
-                <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <label>Wybierz tryb dla kolejnej rundy:</label>
-                    <select id="restart-mode-select" style="margin-bottom: 15px;">
-                        <option value="word-to-def">Słówko -> Tłumaczenie</option>
-                        <option value="def-to-word">Tłumaczenie -> Słówko</option>
-                    </select>
-                    <button id="restart-btn" style="width: 100%;">Zacznij od nowa (Losuj ponownie)</button>
+                <div class="restart-section">
+                    <h3>Zacznij od nowa (Losuj ponownie):</h3>
+                    <div class="vertical-buttons">
+                        <button id="restart-word-def-btn">Tryb: Słówko -> Tłumaczenie</button>
+                        <button id="restart-def-word-btn">Tryb: Tłumaczenie -> Słówko</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -76,21 +73,28 @@
 
     <script>
         const fileInput = document.getElementById('file-input');
-        const startBtn = document.getElementById('start-btn');
-        const resetBtn = document.getElementById('reset-btn');
-        const restartBtn = document.getElementById('restart-btn');
+        
+        // Setup buttons
+        const startWordDefBtn = document.getElementById('start-word-def-btn');
+        const startDefWordBtn = document.getElementById('start-def-word-btn');
+        
+        // Quiz buttons
         const checkBtn = document.getElementById('check-btn');
         const nextBtn = document.getElementById('next-btn');
+        const resetBtn = document.getElementById('reset-btn');
         
+        // Restart buttons
+        const restartWordDefBtn = document.getElementById('restart-word-def-btn');
+        const restartDefWordBtn = document.getElementById('restart-def-word-btn');
+        
+        // Sections & Elements
         const setupSection = document.getElementById('setup-section');
         const quizSection = document.getElementById('quiz-section');
         const resultSection = document.getElementById('result-section');
-        
         const questionDisplay = document.getElementById('question-display');
         const answerInput = document.getElementById('answer-input');
         const feedback = document.getElementById('feedback');
         const resultsTableBody = document.getElementById('results-table-body');
-        const restartModeSelect = document.getElementById('restart-mode-select');
 
         let wordsData = [];
         let answerHistory = [];
@@ -98,14 +102,14 @@
         let correctAnswers = 0;
         let mode = 'word-to-def';
 
-        startBtn.addEventListener('click', () => {
+        function handleSetupStart(selectedMode) {
             const file = fileInput.files[0];
             if (!file) {
                 alert("Proszę wybrać plik .txt");
                 return;
             }
 
-            mode = document.getElementById('mode-select').value;
+            mode = selectedMode;
             const reader = new FileReader();
             
             reader.onload = (e) => {
@@ -118,7 +122,10 @@
                 }
             };
             reader.readAsText(file);
-        });
+        }
+
+        startWordDefBtn.addEventListener('click', () => handleSetupStart('word-to-def'));
+        startDefWordBtn.addEventListener('click', () => handleSetupStart('def-to-word'));
 
         function parseFile(text) {
             const lines = text.split('\n');
@@ -154,12 +161,15 @@
             showQuestion();
         }
 
-        // Reset the current mode
         resetBtn.addEventListener('click', startQuiz);
 
-        // Restart with potentially a new mode
-        restartBtn.addEventListener('click', () => {
-            mode = restartModeSelect.value;
+        restartWordDefBtn.addEventListener('click', () => {
+            mode = 'word-to-def';
+            startQuiz();
+        });
+
+        restartDefWordBtn.addEventListener('click', () => {
+            mode = 'def-to-word';
             startQuiz();
         });
 
@@ -239,9 +249,6 @@
             document.getElementById('percentage').textContent = percent;
             document.getElementById('correct-count').textContent = correctAnswers;
             document.getElementById('total-count').textContent = wordsData.length;
-
-            // Update the dropdown to match the current mode used
-            restartModeSelect.value = mode;
 
             resultsTableBody.innerHTML = '';
             answerHistory.forEach(item => {
