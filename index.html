@@ -62,7 +62,14 @@
                     </table>
                 </div>
 
-                <button id="restart-btn">Zacznij od nowa (Losuj ponownie)</button>
+                <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <label>Wybierz tryb dla kolejnej rundy:</label>
+                    <select id="restart-mode-select" style="margin-bottom: 15px;">
+                        <option value="word-to-def">Słówko -> Tłumaczenie</option>
+                        <option value="def-to-word">Tłumaczenie -> Słówko</option>
+                    </select>
+                    <button id="restart-btn" style="width: 100%;">Zacznij od nowa (Losuj ponownie)</button>
+                </div>
             </div>
         </div>
     </div>
@@ -83,6 +90,7 @@
         const answerInput = document.getElementById('answer-input');
         const feedback = document.getElementById('feedback');
         const resultsTableBody = document.getElementById('results-table-body');
+        const restartModeSelect = document.getElementById('restart-mode-select');
 
         let wordsData = [];
         let answerHistory = [];
@@ -146,8 +154,14 @@
             showQuestion();
         }
 
+        // Reset the current mode
         resetBtn.addEventListener('click', startQuiz);
-        restartBtn.addEventListener('click', startQuiz);
+
+        // Restart with potentially a new mode
+        restartBtn.addEventListener('click', () => {
+            mode = restartModeSelect.value;
+            startQuiz();
+        });
 
         function showQuestion() {
             feedback.textContent = '';
@@ -225,6 +239,9 @@
             document.getElementById('percentage').textContent = percent;
             document.getElementById('correct-count').textContent = correctAnswers;
             document.getElementById('total-count').textContent = wordsData.length;
+
+            // Update the dropdown to match the current mode used
+            restartModeSelect.value = mode;
 
             resultsTableBody.innerHTML = '';
             answerHistory.forEach(item => {
